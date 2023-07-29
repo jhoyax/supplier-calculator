@@ -1,4 +1,4 @@
-import './globals.css'
+import './styles/globals.css'
 import { Inter } from 'next/font/google'
 import Link from 'next/link'
 import {ThemeProvider} from './theme-provider'

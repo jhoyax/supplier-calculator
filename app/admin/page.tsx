@@ -1,25 +1,35 @@
 'use client'
 
-import {useThemeContext} from './../theme-provider'
+import { MouseEvent } from 'react';
+import {useThemeContext} from '../theme-provider'
+import {Supplier} from '../lib/interfaces'
 
 export default function Admin() {
-    const [suppliers, updateSuppliers] = useThemeContext();
+    const context = useThemeContext(),
+        suppliers = context.suppliers,
+        updateSuppliers = context.updateSuppliers;
 
-    function extractData(id: string, trElement: object) {
+    function extractData(id: number, trElement: HTMLTableRowElement): Supplier {
+        let nameElement = trElement?.querySelector('[name=name]') as HTMLInputElement,
+            unitOfPurchaseElement = trElement?.querySelector('[name=unit_of_purchase]') as HTMLInputElement,
+            unitAmountElement = trElement?.querySelector('[name=unit_amount]') as HTMLInputElement,
+            unitCodeElement = trElement?.querySelector('[name=unit_code]') as HTMLInputElement,
+            priceElement = trElement?.querySelector('[name=price]') as HTMLInputElement;
+
         return {
             id: id,
-            name: trElement.querySelector('[name=name]').value,
-            unit_of_purchase: trElement.querySelector('[name=unit_of_purchase]').value,
-            unit_amount: ! isNaN(parseFloat(trElement.querySelector('[name=unit_amount]').value)) ? parseFloat(trElement.querySelector('[name=unit_amount]').value) : '',
-            unit_code: trElement.querySelector('[name=unit_code]').value,
-            price: ! isNaN(parseFloat(trElement.querySelector('[name=price]').value)) ? parseFloat(trElement.querySelector('[name=price]').value) : '',
+            name: nameElement.value,
+            unit_of_purchase: unitOfPurchaseElement.value,
+            unit_amount: ! isNaN(parseFloat(unitAmountElement.value)) ? parseFloat(unitAmountElement.value) : 0,
+            unit_code: unitCodeElement.value,
+            price: ! isNaN(parseFloat(priceElement.value)) ? parseFloat(priceElement.value) : 0,
             isEdit: false,
         };
     }
 
-    function addSupplier(e: object) {
+    function addSupplier(e: MouseEvent) {
         var id = suppliers.length + 1,
-            trElement = e.target.parentElement.closest('tr'),
+            trElement = (e.target as HTMLButtonElement).parentElement?.closest('tr') as HTMLTableRowElement,
             data = extractData(id, trElement);
 
         if (validateSupplier(data)) {
@@ -32,10 +42,11 @@ export default function Admin() {
         }
     }
 
-    function editSupplier(e: object) {
-        var tbodyElement = e.target.parentElement.closest('tbody'),
-            trElement = e.target.parentElement.closest('tr'),
-            data = JSON.parse(trElement.dataset.supplier);
+    function editSupplier(e: MouseEvent) {
+        var tbodyElement = (e.target as HTMLButtonElement).parentElement?.closest('tbody'),
+            trElement = (e.target as HTMLButtonElement).parentElement?.closest('tr') as HTMLTableRowElement,
+            trDataset = trElement.dataset,
+            data = JSON.parse(trDataset.supplier!);
 
         const editSuppliers = [...suppliers].map((item) => {
 
@@ -49,18 +60,25 @@ export default function Admin() {
         updateSuppliers(editSuppliers);
 
         setTimeout(() => {
-            let editTrElement = tbodyElement.querySelector(`tr[data-key="${data.id}"]`);
-            editTrElement.querySelector('[name=name]').value = data.name;
-            editTrElement.querySelector('[name=unit_of_purchase]').value = data.unit_of_purchase;
-            editTrElement.querySelector('[name=unit_amount]').value = data.unit_amount;
-            editTrElement.querySelector('[name=unit_code]').value = data.unit_code;
-            editTrElement.querySelector('[name=price]').value = data.price;
+            let editTrElement = tbodyElement?.querySelector(`tr[data-key="${data.id}"]`),
+                nameElement = editTrElement?.querySelector('[name=name]') as HTMLInputElement,
+                unitOfPurchaseElement = editTrElement?.querySelector('[name=unit_of_purchase]') as HTMLInputElement,
+                unitAmountElement = editTrElement?.querySelector('[name=unit_amount]') as HTMLInputElement,
+                unitCodeElement = editTrElement?.querySelector('[name=unit_code]') as HTMLInputElement,
+                priceElement = editTrElement?.querySelector('[name=price]') as HTMLInputElement;
+            
+            nameElement.value = data.name;
+            unitOfPurchaseElement.value = data.unit_of_purchase;
+            unitAmountElement.value = data.unit_amount;
+            unitCodeElement.value = data.unit_code;
+            priceElement.value = data.price;
         }, 500);
     }
 
-    function saveSupplier(e: object) {
-        var trElement = e.target.parentElement.closest('tr'),
-            supplier = JSON.parse(trElement.dataset.supplier),
+    function saveSupplier(e: MouseEvent) {
+        var trElement = (e.target as HTMLButtonElement).parentElement?.closest('tr') as HTMLTableRowElement,
+            trDataset = trElement.dataset,
+            supplier = JSON.parse(trDataset.supplier!),
             data = extractData(supplier.id, trElement);
 
         if (validateSupplier(data)) {
@@ -79,15 +97,16 @@ export default function Admin() {
         }
     }
 
-    function deleteSupplier(index: string) {
+    function deleteSupplier(index: number) {
         if (confirm('Are you sure?')) {
             updateSuppliers(suppliers.filter(item => item.id !== index));
         }
     }
 
-    function cancelSupplier(e: object) {
-        var trElement = e.target.parentElement.closest('tr'),
-            data = JSON.parse(trElement.dataset.supplier);
+    function cancelSupplier(e: MouseEvent) {
+        var trElement = (e.target as HTMLButtonElement).parentElement?.closest('tr') as HTMLTableRowElement,
+            trDataset = trElement.dataset,
+            data = JSON.parse(trDataset.supplier!);
 
         const supplier = [...suppliers].map((item) => {
 
@@ -101,7 +120,7 @@ export default function Admin() {
         updateSuppliers(supplier);
     }
 
-    function validateSupplier(data: object = {}) {
+    function validateSupplier(data: Supplier) {
         var valid = true;
 
         if (! Object.keys(data).length) {
@@ -109,7 +128,7 @@ export default function Admin() {
         }
 
         for (const key in data) {
-            if (! String(data[key]).trim()) {
+            if (! String(data[key as keyof Supplier]).trim()) {
                 valid = false;
                 break;
             }

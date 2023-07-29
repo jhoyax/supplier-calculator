@@ -1,16 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, MouseEvent } from 'react'
 import {useThemeContext} from './theme-provider'
+import {Supplier} from './lib/interfaces'
 
 export default function Home() {
-  const [suppliers] = useThemeContext();
-  const [result, setResult] = useState('')
+  const context = useThemeContext(),
+        suppliers = context.suppliers,
+        [result, setResult] = useState('');
 
-  function handleClickCalculate(e: object) {
-    var divElement = e.target.parentElement.closest('div'),
-        unit_amount = ! isNaN(parseFloat(divElement.querySelector('[name=unit_amount]').value)) ? parseFloat(divElement.querySelector('[name=unit_amount]').value) : '',
-        unit_code = divElement.querySelector('[name=unit_code]').value;
+  function handleClickCalculate(e: MouseEvent) {
+    var divElement = (e.target as HTMLButtonElement).parentElement?.closest('div') as HTMLDivElement,
+        unitAmountElement = divElement?.querySelector('[name=unit_amount]') as HTMLInputElement,
+        unitCodeElement = divElement?.querySelector('[name=unit_code]') as HTMLInputElement,
+        unit_amount = ! isNaN(parseFloat(unitAmountElement.value)) ? parseFloat(unitAmountElement.value) : 0,
+        unit_code = unitCodeElement.value;
 
     calculateSupplier(unit_amount, unit_code);
   }
@@ -65,7 +69,7 @@ export default function Home() {
     }
   }
 
-  function convertSupplierUnitByCode(supplier: object, code: string) {
+  function convertSupplierUnitByCode(supplier: Supplier, code: string) {
     let conversionTable = {
       'g': {
         'kg': 1000,
@@ -83,13 +87,13 @@ export default function Home() {
 
     if (supplier.unit_code == code) {
       return {
-        amount: parseFloat(supplier.unit_amount),
+        amount: supplier.unit_amount,
         code: supplier.unit_code,
       };
     }
 
     return {
-      amount: parseFloat(supplier.unit_amount/conversionTable[supplier.unit_code][code]),
+      amount: supplier.unit_amount / conversionTable[supplier.unit_code as keyof {}][code],
       code: code,
     };
   }
@@ -101,7 +105,7 @@ export default function Home() {
       'sack': 's',
     };
 
-    return `${count} ${noun}${count !== 1 ? suffixTable[noun] : ''}`;
+    return `${count} ${noun}${count !== 1 ? suffixTable[noun as keyof {}] : ''}`;
   }
 
   return (
@@ -116,7 +120,7 @@ export default function Home() {
             <option value="kg">Kilogram (kg)</option>
             <option value="lb">Pound (lb)</option>
           </select>
-          <button className='ml-4 p-2 bg-green-500 hover:bg-green-700' onClick={(e) => handleClickCalculate(e)}>Calculate</button>
+          <button className='ml-4 p-2 bg-green-500 hover:bg-green-700' onClick={handleClickCalculate}>Calculate</button>
         </div>
       </div>
 

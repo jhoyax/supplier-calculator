@@ -1,15 +1,27 @@
 'use client'
  
 import { createContext, useContext, useState } from 'react'
- 
-export const Context = createContext([])
- 
-export function ThemeProvider({ children }) {
-    const [suppliers, updateSuppliers] = useState([]);
+import {Suppliers} from './lib/interfaces'
 
-    return <Context.Provider value={[suppliers, updateSuppliers]}>{children}</Context.Provider>
+type Props = React.PropsWithChildren<{}>;
+ 
+export const Context = createContext<{
+    suppliers: Suppliers, 
+    updateSuppliers: (newValue: Suppliers) => void
+}>({
+    suppliers: [], 
+    updateSuppliers: () => undefined
+})
+ 
+export function ThemeProvider({ children }: Props) {
+    const [suppliers, updateSuppliers] = useState<Suppliers>([]);
+
+    return <Context.Provider value={{suppliers, updateSuppliers}}>{children}</Context.Provider>
 }
 
-export function useThemeContext() {
+export function useThemeContext(): {
+    suppliers: Suppliers, 
+    updateSuppliers: (newValue: Suppliers) => void
+} {
     return useContext(Context);
 }
